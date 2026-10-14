@@ -13,7 +13,6 @@ from app.models.listing import (
     Listing,
     ListingFeature,
     ListingImage,
-    ListingModerationLog,
     ListingStatus,
     TransactionType,
 )
@@ -452,14 +451,7 @@ def seed_database() -> None:
                 db.add(img)
 
             if listing.status == ListingStatus.REJECTED.value and moderation_reason:
-                mod_log = ListingModerationLog(
-                    listing_id=listing.id,
-                    admin_id=admin_id,
-                    action="REJECT",
-                    reason=moderation_reason,
-                    created_at=now - timedelta(days=1),
-                )
-                db.add(mod_log)
+                listing.rejection_reason = moderation_reason
 
             seeded_listings.append(listing)
             logger.info(f"Đã tạo tin đăng: [{listing.status}] {listing.title}")
@@ -484,8 +476,9 @@ def seed_database() -> None:
                     view = UserViewHistory(
                         user_id=buyer_id,
                         listing_id=l.id,
-                        view_duration_seconds=45,
-                        created_at=now - timedelta(hours=5),
+                        session_id="seed_session_buyer",
+                        duration_seconds=45,
+                        viewed_at=now - timedelta(hours=5),
                     )
                     db.add(view)
 
@@ -501,7 +494,6 @@ def seed_database() -> None:
                     fav = Favorite(
                         user_id=buyer_id,
                         listing_id=l.id,
-                        created_at=now - timedelta(hours=3),
                     )
                     db.add(fav)
 
@@ -510,19 +502,18 @@ def seed_database() -> None:
             exists_inq = db.scalar(
                 select(Inquiry).where(
                     Inquiry.listing_id == target_listing.id,
-                    Inquiry.user_id == buyer_id,
+                    Inquiry.seeker_id == buyer_id,
                 )
             )
             if not exists_inq:
                 inq = Inquiry(
                     listing_id=target_listing.id,
-                    user_id=buyer_id,
-                    full_name="Lê Thị Khách Mua",
-                    phone_number="0987654321",
-                    email="buyer@bds-smart.vn",
+                    seeker_id=buyer_id,
+                    sender_name="Lê Thị Khách Mua",
+                    sender_phone="0987654321",
+                    sender_email="buyer@bds-smart.vn",
                     message="Chào bạn, tôi rất thích căn hộ Vinhomes Smart City 2PN này. Cho tôi hỏi cuối tuần này thứ Bảy lúc 9h sáng có thể đến xem trực tiếp được không?",
-                    status=InquiryStatus.PENDING.value,
-                    created_at=now - timedelta(hours=2),
+                    status=InquiryStatus.NEW.value,
                 )
                 db.add(inq)
                 logger.info(f"Đã tạo yêu cầu tư vấn mẫu từ Khách mua gửi tin ID {target_listing.id}")
