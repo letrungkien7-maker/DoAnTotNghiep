@@ -384,22 +384,95 @@ Base URL: `http://127.0.0.1:8000/api/v1`
 
 ---
 
-## 8. Khởi Tạo Dữ Liệu Mẫu (Seed Data)
+## 8. Phân Hệ Chatbot AI Tiếng Việt (AI Chatbot)
 
-Script khởi tạo sẵn 5 danh mục BĐS chuẩn, 4 tài khoản mẫu (Admin, 2 Chủ tin, 1 Khách xem), các tin đăng đa trạng thái kèm ảnh và tiện ích:
+### 8.1. Gửi Tin Nhắn Hội Thoại (Send Message)
+- **Endpoint:** `POST /api/v1/chatbot/message`
+- **Quyền:** Public (khách vãng lai) hoặc User (đã đăng nhập)
+- **Request Body:**
+```json
+{
+  "session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "message": "Tìm căn hộ 2pn tại Nam Từ Liêm tầm 3 tỷ full nội thất"
+}
+```
+*(Nếu `session_id` là null, backend sẽ tự khởi tạo một phiên hội thoại mới và trả về UUID).*
 
-```powershell
-# Chạy script tại thư mục backend:
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 142,
+    "session_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "sender": "ASSISTANT",
+    "message_text": "Tôi đã tìm thấy **2** căn hộ chung cư bán tại Nam Từ Liêm, Hà Nội phù hợp nhất với tiêu chí của bạn: ...",
+    "created_at": "2026-10-14T14:30:00Z",
+    "listings": [
+      {
+        "id": 1,
+        "title": "Căn hộ cao cấp Vinhomes Smart City 2PN tầng trung",
+        "price": 3250000000.0,
+        "area": 64.5,
+        "district": "Nam Từ Liêm",
+        "province": "Hà Nội",
+        "match_percentage": 96.5,
+        "match_reasons": ["Giá trong tầm ngân sách", "Đúng khu vực Nam Từ Liêm", "Nội thất đầy đủ"]
+      }
+    ],
+    "suggestions": [
+      "Xem thêm căn hộ cùng khu vực",
+      "Mở rộng ngân sách",
+      "Tìm nhà đất cho thuê"
+    ],
+    "extracted_criteria": {
+      "transaction_type": "SALE",
+      "category_id": 1,
+      "category_name": "Căn hộ chung cư",
+      "province": "Hà Nội",
+      "district": "Nam Từ Liêm",
+      "budget_max": 3500000000.0,
+      "bedrooms": 2,
+      "features": ["Nội thất đầy đủ"]
+    },
+    "is_clarification": false
+  },
+  "message": "Nhận phản hồi từ trợ lý AI thành công"
+}
+```
+
+### 8.2. Danh Sách Phiên Chat Của Người Dùng (List Sessions)
+- **Endpoint:** `GET /api/v1/chatbot/sessions`
+- **Quyền:** User (yêu cầu Bearer Token)
+
+### 8.3. Xem Lịch Sử Tin Nhắn Của Phiên (Get Session Messages)
+- **Endpoint:** `GET /api/v1/chatbot/sessions/{session_id}/messages`
+- **Quyền:** Public / User
+
+### 8.4. Xóa Phiên Hội Thoại (Delete Session)
+- **Endpoint:** `DELETE /api/v1/chatbot/sessions/{session_id}`
+- **Quyền:** Public / User
+
+---
+
+## 9. Khởi Tạo Dữ Liệu Mẫu (Seed Data)
+
+Khởi tạo dữ liệu mẫu với đầy đủ 5 danh mục chuẩn, 3 tài khoản mẫu, 10 bất động sản đa trạng thái (Approved, Pending Approval, Rejected) và tương tác mẫu:
+
+```bash
+# Cách 1: Chạy trực tiếp từ root (Windows / Linux)
+python seed.py
+
+# Cách 2: Chạy qua module backend
 cd backend
-.\.venv\Scripts\Activate.ps1
-python scripts/seed_data.py
+python -m app.scripts.seed_demo_data
 ```
 
 ### Tài khoản Demo có sẵn sau khi Seed:
 | Email | Mật khẩu | Quyền | Họ tên | Vai trò demo |
 | :--- | :--- | :---: | :--- | :--- |
-| `admin@bds.vn` | `AdminPass123!` | `ADMIN` | Quản Trị Viên Hệ Thống | Kiểm duyệt tin, quản lý tài khoản |
-| `chutin1@bds.vn` | `Password123!` | `USER` | Nguyễn Văn Minh | Đăng tin căn hộ, tiếp nhận liên hệ |
-| `chutin2@bds.vn` | `Password123!` | `USER` | Lê Hoàng Nam | Đăng tin nhà phố, đất nền |
-| `khachxem@bds.vn` | `Password123!` | `USER` | Trần Thu Trang | Khách tìm kiếm, lưu yêu thích, gửi tư vấn |
+| `admin@bds-smart.vn` | `Admin@123456` | `ADMIN` | Quản Trị Viên Hệ Thống | Kiểm duyệt tin, quản lý tài khoản |
+| `seller@bds-smart.vn` | `Seller@123456` | `USER` | Trần Văn Môi Giới | Đăng tin, sửa tin, tiếp nhận liên hệ |
+| `buyer@bds-smart.vn` | `Buyer@123456` | `USER` | Lê Thị Khách Mua | Tìm kiếm, chat AI, lưu yêu thích, gửi tư vấn |
+
 
