@@ -1,7 +1,9 @@
 import time
-from typing import Generator, Dict, Any
+from typing import Any, Dict, Generator
+
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
+
 from app.core.config import settings
 
 # Database Engine

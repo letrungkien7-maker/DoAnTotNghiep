@@ -1,6 +1,10 @@
 from datetime import datetime
-from sqlalchemy import DateTime, func
+
+from sqlalchemy import BigInteger, DateTime, Integer, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+# Cross-dialect Primary Key type: BIGINT in PostgreSQL, INTEGER in SQLite
+PK_BIGINT = BigInteger().with_variant(Integer, "sqlite")
 
 
 class Base(DeclarativeBase):

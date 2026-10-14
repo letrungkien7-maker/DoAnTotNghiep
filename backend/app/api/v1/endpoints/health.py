@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
+
 from fastapi import APIRouter, status
+
 from app.core.config import settings
 from app.core.database import check_db_connection
-from app.schemas.health import HealthResponse, DatabaseHealth
+from app.schemas.health import DatabaseHealth, HealthResponse
 
 router = APIRouter()
 
