@@ -296,7 +296,95 @@ Base URL: `http://127.0.0.1:8000/api/v1`
 
 ---
 
-## 7. Khởi Tạo Dữ Liệu Mẫu (Seed Data)
+---
+
+## 7. Phân Hệ Gợi Ý Bất Động Sản Thông Minh (Recommendations)
+
+### 7.1. Gợi Ý Đa Tiêu Chí (Content-Based Multi-Criteria Scoring)
+- **Endpoint:** `POST /api/v1/recommendations/search`
+- **Quyền:** Public / User (Hỗ trợ cá nhân hóa kết hợp nếu có Bearer token)
+- **Mục đích:** Dùng chung cho giao diện Web và Chatbot AI Assistant.
+- **Request Body:**
+```json
+{
+  "transaction_type": "SALE",
+  "category_id": 1,
+  "province": "Hà Nội",
+  "district": "Nam Từ Liêm",
+  "budget_min": 3000000000.0,
+  "budget_max": 4000000000.0,
+  "bedrooms": 2,
+  "features": ["Nội thất đầy đủ", "Sổ đỏ chính chủ"],
+  "top_k": 5
+}
+```
+- **Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "title": "Bán căn hộ 2PN Vinhomes Smart City full nội thất cao cấp",
+        "price": 3200000000.0,
+        "price_unit": "TOTAL",
+        "area": 65.0,
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "address_text": "Đại lộ Thăng Long, Phường Tây Mỗ",
+        "province": "Hà Nội",
+        "district": "Nam Từ Liêm",
+        "transaction_type": "SALE",
+        "category_id": 1,
+        "category_name": "Căn hộ chung cư",
+        "thumbnail_url": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800",
+        "status": "APPROVED",
+        "view_count": 45,
+        "match_score": 0.95,
+        "match_percentage": 95.0,
+        "score_breakdown": {
+          "price_score": 1.0,
+          "location_score": 1.0,
+          "category_score": 1.0,
+          "area_score": 0.95,
+          "bedroom_score": 1.0,
+          "feature_score": 1.0,
+          "total_score": 0.95,
+          "match_percentage": 95.0
+        },
+        "match_reasons": [
+          "Vị trí đúng trọng tâm tại Nam Từ Liêm, Hà Nội",
+          "Mức giá nằm trọn vẹn trong khoảng ngân sách dự kiến của bạn",
+          "Khớp chính xác loại hình: Căn hộ chung cư",
+          "Đáp ứng đủ 2 phòng ngủ theo tiêu chuẩn",
+          "Trùng khớp tiện ích: Nội thất đầy đủ, Sổ đỏ chính chủ"
+        ]
+      }
+    ],
+    "total": 1,
+    "strategy": "CONTENT_BASED_SCORING",
+    "user_profile_applied": false
+  },
+  "message": "Gợi ý bất động sản thành công"
+}
+```
+
+### 7.2. Bảng Tin Cá Nhân Hóa (Personalized Behavioral Feed)
+- **Endpoint:** `GET /api/v1/recommendations/personalized?limit=10`
+- **Quyền:** Public / User (kèm Bearer Token hoặc Header `X-Session-Id`)
+- **Chiến lược:**
+  - Nếu người dùng đã có lịch sử xem hoặc lưu tin: Suy diễn hồ sơ hành vi (giá trung bình, loại hình và quận hay xem nhất) -> Trả về danh sách được cá nhân hóa (`strategy: PERSONALIZED_BEHAVIORAL_FEED`).
+  - Nếu người dùng mới chưa có dữ liệu (Cold Start): Tự động trả về tin đăng thịnh hành nhất (`strategy: POPULAR_COLD_START`).
+
+### 7.3. Bất Động Sản Tương Tự (Item-to-Item Similarity)
+- **Endpoint:** `GET /api/v1/recommendations/similar/{listing_id}?limit=4`
+- **Quyền:** Public
+- **Chiến lược:** Tính độ tương đồng vector Cosine giữa tin đang xem với toàn bộ tin khác cùng phân khúc.
+
+---
+
+## 8. Khởi Tạo Dữ Liệu Mẫu (Seed Data)
 
 Script khởi tạo sẵn 5 danh mục BĐS chuẩn, 4 tài khoản mẫu (Admin, 2 Chủ tin, 1 Khách xem), các tin đăng đa trạng thái kèm ảnh và tiện ích:
 
@@ -314,3 +402,4 @@ python scripts/seed_data.py
 | `chutin1@bds.vn` | `Password123!` | `USER` | Nguyễn Văn Minh | Đăng tin căn hộ, tiếp nhận liên hệ |
 | `chutin2@bds.vn` | `Password123!` | `USER` | Lê Hoàng Nam | Đăng tin nhà phố, đất nền |
 | `khachxem@bds.vn` | `Password123!` | `USER` | Trần Thu Trang | Khách tìm kiếm, lưu yêu thích, gửi tư vấn |
+

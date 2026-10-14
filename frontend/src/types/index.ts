@@ -192,3 +192,22 @@ export interface HealthResponse {
   database: DatabaseHealth;
   timestamp: string;
 }
+
+export interface ScoreBreakdown {
+  price_score: number;
+  location_score: number;
+  category_score: number;
+  area_score: number;
+  bedroom_score: number;
+  feature_score: number;
+  total_score: number;
+  match_percentage: number;
+}
+
+export interface RecommendedListingItem extends ListingCard {
+  match_score: number;
+  match_percentage: number;
+  score_breakdown: ScoreBreakdown;
+  match_reasons: string[];
+}
+

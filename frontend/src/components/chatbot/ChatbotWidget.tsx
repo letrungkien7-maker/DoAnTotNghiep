@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { Bot, X, Send, Sparkles, User, Minimize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { recommendationService, RecommendationCriteria } from '@/services/recommendation.service';
+
 interface Message {
   id: string;
   sender: 'bot' | 'user';
   text: string;
   timestamp: string;
   suggestions?: string[];
+  recommendations?: Array<{ id: number; title: string; priceText: string; matchPct: number }>;
 }
 
 export const ChatbotWidget: React.FC = () => {
@@ -29,7 +32,7 @@ export const ChatbotWidget: React.FC = () => {
     },
   ]);
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const query = (textToSend || input).trim();
     if (!query) return;
 
@@ -43,29 +46,54 @@ export const ChatbotWidget: React.FC = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
 
-    // Handle intelligent UI action or simulate local response until Phase AI backend connects
-    setTimeout(() => {
-      let reply = 'Tôi đã ghi nhận nhu cầu của bạn. Tôi sẽ chuyển bạn đến trang tìm kiếm với các tiêu chí tương ứng.';
-      const lower = query.toLowerCase();
+    const lower = query.toLowerCase();
+    const criteria: RecommendationCriteria = {
+      transaction_type: lower.includes('thuê') ? 'RENT' : 'SALE',
+      top_k: 3,
+    };
+    if (lower.includes('chung cư') || lower.includes('căn hộ')) criteria.category_id = 1;
+    if (lower.includes('nhà riêng') || lower.includes('nhà phố')) criteria.category_id = 2;
+    if (lower.includes('hà nội')) criteria.province = 'Hà Nội';
+    if (lower.includes('cầu giấy')) criteria.district = 'Cầu Giấy';
+    if (lower.includes('nam từ liêm')) criteria.district = 'Nam Từ Liêm';
+    if (lower.includes('4 tỷ')) criteria.budget_max = 4000000000;
+    if (lower.includes('3 tỷ')) criteria.budget_max = 3500000000;
+    if (lower.includes('2 tỷ')) criteria.budget_max = 2500000000;
 
-      if (lower.includes('chung cư') || lower.includes('căn hộ')) {
-        reply = 'Đang tìm kiếm các căn hộ chung cư phù hợp trên hệ thống...';
-        navigate('/search?category_id=1');
-      } else if (lower.includes('thuê')) {
-        reply = 'Đang lọc các bất động sản cho thuê...';
-        navigate('/search?transaction_type=RENT');
-      } else if (lower.includes('đăng tin')) {
-        reply = 'Bạn có thể bấm vào nút "Đăng tin" ở thanh điều hướng trên cùng hoặc truy cập trang đăng tin.';
+    try {
+      const res = await recommendationService.searchRecommendations(criteria);
+      const recs = res.items.slice(0, 3).map((item) => ({
+        id: item.id,
+        title: item.title,
+        priceText:
+          item.price >= 1_000_000_000
+            ? `${(item.price / 1_000_000_000).toFixed(1)} tỷ`
+            : `${(item.price / 1_000_000).toFixed(0)} triệu`,
+        matchPct: item.match_percentage,
+      }));
+
+      let replyText = `Dựa trên thuật toán gợi ý thông minh, tôi tìm thấy ${recs.length} bất động sản phù hợp nhất:`;
+      if (recs.length === 0) {
+        replyText = 'Hiện tại chưa có bất động sản nào khớp hoàn toàn tiêu chí này, bạn có thể tham khảo thêm tại trang Tìm kiếm.';
       }
 
       const botMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'bot',
-        text: reply,
+        text: replyText,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        recommendations: recs,
+      };
+      setMessages((prev) => [...prev, botMsg]);
+    } catch {
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: 'Tôi đã ghi nhận yêu cầu của bạn. Bạn có thể sử dụng menu Tìm kiếm để lọc bất động sản theo tiêu chí chi tiết.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, botMsg]);
-    }, 600);
+    }
   };
 
   return (
@@ -153,6 +181,25 @@ export const ChatbotWidget: React.FC = () => {
                     }`}
                   >
                     <p className="text-xs leading-relaxed">{msg.text}</p>
+
+                    {msg.recommendations && msg.recommendations.length > 0 && (
+                      <div className="mt-2 space-y-1.5 pt-1.5 border-t border-gray-100">
+                        {msg.recommendations.map((rec) => (
+                          <div
+                            key={rec.id}
+                            onClick={() => {
+                              setIsOpen(false);
+                              navigate(`/listings/${rec.id}`);
+                            }}
+                            className="p-2 bg-blue-50/70 hover:bg-blue-100/70 rounded-lg cursor-pointer transition text-[11px] flex items-center justify-between"
+                          >
+                            <span className="font-semibold text-gray-800 line-clamp-1 mr-2">{rec.title}</span>
+                            <span className="font-bold text-blue-600 shrink-0">{rec.priceText}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <span
                       className={`text-[10px] block mt-1 ${
                         msg.sender === 'user' ? 'text-blue-200 text-right' : 'text-gray-400'

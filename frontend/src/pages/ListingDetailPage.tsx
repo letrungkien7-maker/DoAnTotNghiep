@@ -16,12 +16,15 @@ import {
   ShieldCheck,
   Lock,
   CheckCircle,
+  Sparkles,
 } from 'lucide-react';
-import { ListingDetail } from '@/types';
+import { ListingCard as ListingCardType, ListingDetail } from '@/types';
 import { listingService } from '@/services/listing.service';
 import { interactionService } from '@/services/interaction.service';
+import { recommendationService } from '@/services/recommendation.service';
 import { formatDate, formatPrice, getStatusBadge } from '@/utils/formatters';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { ListingCard } from '@/components/listings/ListingCard';
 import { InquiryModal } from '@/components/listings/InquiryModal';
 import { useAuth } from '@/context/AuthContext';
 
@@ -36,15 +39,20 @@ export const ListingDetailPage: React.FC = () => {
   const [isFavorited, setIsFavorited] = useState<boolean>(false);
   const [inquiryModalOpen, setInquiryModalOpen] = useState<boolean>(false);
   const [copyNotice, setCopyNotice] = useState<boolean>(false);
+  const [similarListings, setSimilarListings] = useState<ListingCardType[]>([]);
 
   useEffect(() => {
     if (!id) return;
     const fetchDetail = async () => {
       setLoading(true);
       try {
-        const data = await listingService.getListingDetail(Number(id));
+        const [data, similarData] = await Promise.all([
+          listingService.getListingDetail(Number(id)),
+          recommendationService.getSimilarListings(Number(id), 4).catch(() => ({ items: [] })),
+        ]);
         setListing(data);
         setIsFavorited(data.is_favorite);
+        setSimilarListings(similarData.items);
       } catch {
         navigate('/search');
       } finally {
@@ -365,6 +373,29 @@ export const ListingDetailPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Recommended Similar Properties Section */}
+      {similarListings.length > 0 && (
+        <section className="pt-8 border-t border-gray-200 space-y-4">
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Bất động sản tương tự dành cho bạn</h2>
+              <p className="text-xs text-gray-500">
+                Thuật toán Content-Based AI gợi ý dựa trên vị trí, phân khúc giá và đặc điểm thiết kế
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {similarListings.map((simItem) => (
+              <ListingCard key={simItem.id} listing={simItem} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Inquiry Modal */}
       <InquiryModal
