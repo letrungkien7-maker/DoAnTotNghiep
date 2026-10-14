@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Bot,
   X,
   Send,
-  Sparkles,
   User,
   Minimize2,
   RotateCcw,
@@ -23,6 +21,7 @@ import {
   ExtractedCriteria,
 } from '@/services/chatbot.service';
 import { RecommendedListingItem } from '@/types';
+import { MonkeyMascot } from './MonkeyMascot';
 
 interface DisplayMessage {
   id: string;
@@ -38,7 +37,7 @@ interface DisplayMessage {
 const INITIAL_MESSAGE: DisplayMessage = {
   id: 'init-1',
   sender: 'bot',
-  text: 'Xin chào! Tôi là Trợ lý AI Bất động sản BDS Smart. Tôi có thể hỗ trợ bạn tìm kiếm bất động sản theo ngân sách, khu vực, số phòng ngủ hoặc giải đáp thắc mắc về mua bán, cho thuê.',
+  text: 'Xin chào! Em là Khỉ Trợ lý AI Bất động sản BDS Smart 🐵. Em có thể hỗ trợ bạn tìm kiếm nhà đất theo ngân sách, khu vực, số phòng ngủ hoặc giải đáp mọi thắc mắc về mua bán, cho thuê!',
   timestamp: 'Vừa xong',
   suggestions: [
     'Tìm chung cư 2PN Nam Từ Liêm dưới 3.5 tỷ',
@@ -58,6 +57,7 @@ export const ChatbotWidget: React.FC = () => {
   });
   const [messages, setMessages] = useState<DisplayMessage[]>([INITIAL_MESSAGE]);
   const [activeCriteria, setActiveCriteria] = useState<ExtractedCriteria | null>(null);
+  const [isChatInputFocused, setIsChatInputFocused] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -182,21 +182,28 @@ export const ChatbotWidget: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Floating launcher button */}
+      {/* Floating launcher button with Monkey Mascot */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center space-x-2.5 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200"
-          title="Mở Trợ lý Chatbot AI Bất động sản"
+          className="group relative flex items-center gap-2 pl-2 pr-4 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-medium rounded-full shadow-2xl hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20"
+          title="Khỉ Trợ lý AI - Nhìn theo con trỏ chuột"
         >
-          <div className="relative">
-            <Bot className="w-6 h-6 animate-pulse" />
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-400"></span>
+          {/* Animated Monkey Mascot looking at cursor */}
+          <div className="relative shrink-0">
+            <MonkeyMascot size={46} showSpeechBubble={true} />
+            <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border border-white"></span>
             </span>
           </div>
-          <span className="hidden sm:inline text-sm font-semibold tracking-wide">Tư vấn AI</span>
+          <div className="flex flex-col text-left">
+            <span className="text-sm font-bold tracking-wide leading-tight">Tư vấn AI</span>
+            <span className="text-[10px] text-blue-200 font-medium flex items-center gap-1">
+              <span>Khỉ Smart</span>
+              <span className="text-amber-300">🐵</span>
+            </span>
+          </div>
         </button>
       )}
 
@@ -204,21 +211,25 @@ export const ChatbotWidget: React.FC = () => {
       {isOpen && (
         <div className="w-[375px] sm:w-[440px] h-[580px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-4 py-3 text-white flex items-center justify-between shadow-xs select-none">
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-4 py-2.5 text-white flex items-center justify-between shadow-xs select-none">
             <div className="flex items-center space-x-2.5">
-              <div className="p-1.5 bg-white/20 rounded-xl backdrop-blur-xs">
-                <Sparkles className="w-5 h-5 text-amber-300" />
+              <div className="p-0.5 bg-white/20 rounded-xl backdrop-blur-xs shrink-0 overflow-visible">
+                <MonkeyMascot size={36} isTyping={isChatInputFocused || isLoading} />
               </div>
               <div>
                 <h3 className="font-semibold text-sm leading-tight flex items-center gap-1.5">
-                  Trợ lý AI Bất Động Sản
+                  Trợ lý Khỉ AI Thông Minh
                   <span className="text-[10px] bg-amber-400/90 text-slate-900 font-bold px-1.5 py-0.2 rounded-full">
                     SMART
                   </span>
                 </h3>
                 <p className="text-xs text-blue-100 flex items-center space-x-1.5 mt-0.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-                  <span>Trực tuyến 24/7 • Dữ liệu thực tế</span>
+                  <span>
+                    {isChatInputFocused
+                      ? 'Khỉ quay đi để bạn nhập liệu riêng tư 🙈'
+                      : 'Mắt nhìn theo chuột • Trực tuyến 24/7'}
+                  </span>
                 </p>
               </div>
             </div>
@@ -287,10 +298,10 @@ export const ChatbotWidget: React.FC = () => {
                     className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-semibold shadow-2xs ${
                       msg.sender === 'user'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-indigo-600 text-white'
+                        : 'bg-amber-100 border border-amber-200'
                     }`}
                   >
-                    {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
+                    {msg.sender === 'user' ? <User className="w-3.5 h-3.5" /> : <span className="text-sm select-none leading-none">🐵</span>}
                   </div>
 
                   <div
@@ -412,12 +423,12 @@ export const ChatbotWidget: React.FC = () => {
             {/* Loading Indicator */}
             {isLoading && (
               <div className="flex items-start space-x-2">
-                <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                  <Bot className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-full bg-amber-100 border border-amber-200 text-slate-800 flex items-center justify-center shrink-0 shadow-2xs">
+                  <span className="text-sm select-none leading-none">🐵</span>
                 </div>
                 <div className="p-3 bg-white border border-gray-200 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-2 text-xs text-gray-500">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
-                  <span>AI đang phân tích và tìm kiếm bất động sản...</span>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />
+                  <span>Khỉ AI đang phân tích và tìm kiếm bất động sản...</span>
                 </div>
               </div>
             )}
@@ -431,6 +442,8 @@ export const ChatbotWidget: React.FC = () => {
               ref={inputRef}
               type="text"
               value={input}
+              onFocus={() => setIsChatInputFocused(true)}
+              onBlur={() => setIsChatInputFocused(false)}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -438,7 +451,7 @@ export const ChatbotWidget: React.FC = () => {
                   handleSend();
                 }
               }}
-              placeholder="VD: Căn hộ 2PN Nam Từ Liêm dưới 3.5 tỷ..."
+              placeholder="Nhập yêu cầu: VD: Căn hộ 2PN Nam Từ Liêm dưới 3.5 tỷ..."
               disabled={isLoading}
               className="flex-1 text-xs px-3.5 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
             />
