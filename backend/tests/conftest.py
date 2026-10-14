@@ -116,3 +116,91 @@ def admin_token_headers(test_admin: User) -> dict:
         data={"sub": str(test_admin.id), "email": test_admin.email, "role": test_admin.role}
     )
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def test_user_2(db_session: Session) -> User:
+    """Create and return a second independent regular user."""
+    user = User(
+        email="user2@test.com",
+        password_hash=hash_password("User2Password123!"),
+        full_name="Nguyễn Văn User 2",
+        phone_number="0922334455",
+        role=UserRole.USER.value,
+        is_active=True
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def user2_token_headers(test_user_2: User) -> dict:
+    """Generate Bearer Authorization header for user 2."""
+    token = create_access_token(
+        data={"sub": str(test_user_2.id), "email": test_user_2.email, "role": test_user_2.role}
+    )
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def sample_category(db_session: Session):
+    """Create and return a sample property category."""
+    from app.models.listing import Category
+    cat = Category(
+        name="Căn hộ chung cư",
+        slug="can-ho-chung-cu",
+        description="Chung cư thương mại"
+    )
+    db_session.add(cat)
+    db_session.commit()
+    db_session.refresh(cat)
+    return cat
+
+
+@pytest.fixture
+def approved_listing(db_session: Session, test_user: User, sample_category):
+    """Create and return an approved listing with images."""
+    from datetime import datetime, timedelta, timezone
+
+    from app.models.listing import (
+        Listing,
+        ListingFeature,
+        ListingImage,
+        ListingStatus,
+        TransactionType,
+    )
+    now = datetime.now(timezone.utc)
+    listing = Listing(
+        user_id=test_user.id,
+        category_id=sample_category.id,
+        title="Căn hộ cao cấp 2 phòng ngủ Royal City",
+        description="Căn hộ tầng trung thoáng mát đầy đủ tiện nghi, view thành phố tuyệt đẹp.",
+        transaction_type=TransactionType.SALE.value,
+        price=4500000000.0,
+        price_unit="TOTAL",
+        area=75.0,
+        bedrooms=2,
+        bathrooms=2,
+        address_text="72A Nguyễn Trãi",
+        province="Hà Nội",
+        district="Thanh Xuân",
+        status=ListingStatus.APPROVED.value,
+        published_at=now - timedelta(days=1),
+        expired_at=now + timedelta(days=29)
+    )
+    db_session.add(listing)
+    db_session.commit()
+    db_session.refresh(listing)
+
+    db_session.add_all([
+        ListingImage(listing_id=listing.id, image_url="https://cloudinary.com/img1.jpg", public_id="img1", is_thumbnail=True, display_order=0),
+        ListingImage(listing_id=listing.id, image_url="https://cloudinary.com/img2.jpg", public_id="img2", is_thumbnail=False, display_order=1),
+        ListingImage(listing_id=listing.id, image_url="https://cloudinary.com/img3.jpg", public_id="img3", is_thumbnail=False, display_order=2),
+        ListingFeature(listing_id=listing.id, feature_name="Ban công rộng"),
+    ])
+    db_session.commit()
+    db_session.refresh(listing)
+    return listing
+

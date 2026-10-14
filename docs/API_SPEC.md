@@ -31,152 +31,84 @@ Base URL: `http://127.0.0.1:8000/api/v1`
 ### 1.3. Bảng Mã Lỗi Nghiệp Vụ
 | HTTP Status | Mã lỗi (`code`) | Ý nghĩa nghiệp vụ |
 | :---: | :--- | :--- |
+| `400` | `LISTING_LOCKED_PENDING` | Tin đăng đang ở trạng thái chờ duyệt (PENDING_APPROVAL), chủ tin không được sửa trực tiếp |
+| `400` | `SELF_INQUIRY_NOT_ALLOWED` | Người bán không thể tự gửi form yêu cầu tư vấn cho chính tin đăng của mình |
 | `401` | `INVALID_CREDENTIALS` | Sai thông tin đăng nhập hoặc thiếu Bearer token hợp lệ |
 | `401` | `TOKEN_EXPIRED` | Token JWT đã hết thời gian hiệu lực |
-| `403` | `FORBIDDEN_RESOURCE` | Người dùng thường cố tình gọi API yêu cầu quyền ADMIN |
+| `403` | `FORBIDDEN_RESOURCE` | Người dùng thường cố tình gọi API Admin hoặc can thiệp tin của người khác |
 | `403` | `USER_INACTIVE` | Tài khoản đã bị khóa bởi quản trị viên |
-| `404` | `RECORD_NOT_FOUND` | Không tìm thấy người dùng hoặc tài nguyên tương ứng |
-| `409` | `RESOURCE_CONFLICT` | Trùng lặp dữ liệu độc bản (Email đã được đăng ký) |
-| `422` | `VALIDATION_FAILED` | Lỗi định dạng dữ liệu (mật khẩu < 8 ký tự, sai cấu trúc email) |
-| `429` | `RATE_LIMIT_EXCEEDED` | Quá số lượt đăng nhập cho phép (hạn chế tấn công brute-force) |
-| `500` | `INTERNAL_SERVER_ERROR` | Lỗi máy chủ (che giấu hoàn toàn stack trace để đảm bảo bảo mật) |
+| `404` | `RECORD_NOT_FOUND` | Không tìm thấy người dùng, danh mục hoặc tin đăng |
+| `409` | `RESOURCE_CONFLICT` | Trùng lặp dữ liệu độc bản (Email, Tên hoặc Slug danh mục) |
+| `422` | `VALIDATION_FAILED` | Lỗi validate dữ liệu (thiếu 3 ảnh khi nộp duyệt, giá <= 0, v.v.) |
+| `429` | `RATE_LIMIT_EXCEEDED` | Quá số lượt đăng nhập cho phép (hạn chế brute-force) |
+| `500` | `INTERNAL_SERVER_ERROR` | Lỗi máy chủ (che giấu stack trace để đảm bảo bảo mật) |
 
 ---
 
 ## 2. Phân Hệ Xác Thực & Tài Khoản (Auth & Profile)
 
-### 2.1. Đăng ký Tài khoản
-- **Endpoint:** `POST /api/v1/auth/register`
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/auth/register` | Public | Đăng ký tài khoản mới (mặc định gán role `USER`) |
+| `POST` | `/auth/login` | Public | Đăng nhập nhận JWT Token (có bảo vệ Rate Limit) |
+| `POST` | `/auth/logout` | User | Đăng xuất tài khoản |
+| `GET` | `/users/me` | User | Lấy thông tin hồ sơ của tài khoản đang đăng nhập |
+| `PUT` | `/users/me` | User | Cập nhật họ tên, số điện thoại, avatar cá nhân |
+| `GET` | `/users` | Admin | Tìm kiếm, lọc và phân trang danh sách tài khoản |
+| `PATCH` | `/users/{id}/status` | Admin | Khóa hoặc kích hoạt lại tài khoản người dùng |
+
+---
+
+## 3. Phân Hệ Danh Mục Bất Động Sản (Categories)
+
+### 3.1. Danh Sách Danh Mục
+- **Endpoint:** `GET /api/v1/categories`
 - **Quyền:** Public
-- **Quy tắc bảo mật:** Không nhận trường `role` từ client. Tất cả tài khoản đăng ký mới luôn mặc định là `USER`.
-- **Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePassword123!",
-  "full_name": "Nguyễn Văn A",
-  "phone_number": "0912345678"
-}
-```
-- **Response (201 Created):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "email": "user@example.com",
-    "full_name": "Nguyễn Văn A",
-    "phone_number": "0912345678",
-    "role": "USER",
-    "is_active": true,
-    "avatar_url": null,
-    "created_at": "2026-10-14T13:30:00Z"
-  },
-  "message": "Đăng ký tài khoản thành công"
-}
-```
-
----
-
-### 2.2. Đăng nhập & Lấy Bearer Token
-- **Endpoint:** `POST /api/v1/auth/login`
-- **Quyền:** Public (có bảo vệ chống brute-force qua Rate Limiter)
-- **Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePassword123!"
-}
-```
 - **Response (200 OK):**
 ```json
 {
   "success": true,
-  "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "token_type": "bearer",
-    "expires_in": 3600,
-    "user": {
+  "data": [
+    {
       "id": 1,
-      "email": "user@example.com",
-      "full_name": "Nguyễn Văn A",
-      "phone_number": "0912345678",
-      "role": "USER",
-      "is_active": true,
-      "avatar_url": null,
-      "created_at": "2026-10-14T13:30:00Z"
+      "name": "Căn hộ chung cư",
+      "slug": "can-ho-chung-cu",
+      "description": "Căn hộ cao cấp, trung cấp và nhà ở xã hội"
     }
-  },
-  "message": "Đăng nhập thành công"
+  ],
+  "message": "Lấy danh mục thành công"
 }
 ```
 
----
-
-### 2.3. Đăng xuất
-- **Endpoint:** `POST /api/v1/auth/logout`
-- **Quyền:** Bearer Token
-- **Headers:** `Authorization: Bearer <token>`
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": { "user_id": 1 },
-  "message": "Đăng xuất thành công"
-}
-```
-
----
-
-### 2.4. Xem Hồ Sơ Cá Nhân
-- **Endpoint:** `GET /api/v1/users/me`
-- **Quyền:** Bearer Token (Authenticated User)
-- **Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": {
-    "id": 1,
-    "email": "user@example.com",
-    "full_name": "Nguyễn Văn A",
-    "phone_number": "0912345678",
-    "role": "USER",
-    "is_active": true,
-    "avatar_url": null,
-    "created_at": "2026-10-14T13:30:00Z"
-  },
-  "message": "Lấy thông tin tài khoản thành công"
-}
-```
-
----
-
-### 2.5. Cập Nhật Hồ Sơ Cá Nhân
-- **Endpoint:** `PUT /api/v1/users/me`
-- **Quyền:** Bearer Token (Authenticated User)
+### 3.2. Tạo Danh Mục Mới
+- **Endpoint:** `POST /api/v1/categories`
+- **Quyền:** ADMIN Only
 - **Request Body:**
 ```json
 {
-  "full_name": "Nguyễn Văn A (Mới)",
-  "phone_number": "0988776655",
-  "avatar_url": "https://res.cloudinary.com/demo/avatar.jpg"
+  "name": "Biệt thự nghỉ dưỡng",
+  "slug": "biet-thu-nghi-duong",
+  "description": "Biệt thự biển và ven đồi"
 }
 ```
-- **Response (200 OK):** Trả về `UserResponse` đã cập nhật.
 
 ---
 
-## 3. Phân Hệ Quản Trị Người Dùng (Admin Only)
+## 4. Phân Hệ Bất Động Sản (Listings)
 
-### 3.1. Danh Sách & Tìm Kiếm Người Dùng
-- **Endpoint:** `GET /api/v1/users`
-- **Quyền:** ADMIN Only (Token phải có `role == "ADMIN"`)
+### 4.1. Tìm Kiếm & Lọc BĐS Công Khai
+- **Endpoint:** `GET /api/v1/listings`
+- **Quyền:** Public (chỉ trả về tin `APPROVED` và `expired_at > now()`)
 - **Query Params:**
-  - `page` (int, default: 1)
-  - `size` (int, default: 10, max: 100)
-  - `role` (str, optional: "USER" hoặc "ADMIN")
-  - `is_active` (bool, optional)
-  - `search` (str, optional: tìm kiếm theo tên, email, số điện thoại)
+  - `keyword`: Tìm kiếm theo từ khóa trong tiêu đề, mô tả, địa chỉ
+  - `category_id`: Lọc theo ID loại hình BĐS
+  - `transaction_type`: `SALE` (Bán) hoặc `RENT` (Cho thuê)
+  - `min_price`, `max_price`: Khoảng giá tìm kiếm
+  - `min_area`, `max_area`: Khoảng diện tích ($m^2$)
+  - `province`, `district`: Lọc theo tỉnh/thành, quận/huyện
+  - `bedrooms`: Số phòng ngủ tối thiểu
+  - `sort_by`: `newest` (mặc định), `price_asc`, `price_desc`, `area_asc`, `area_desc`
+  - `page` (default 1), `size` (default 12, max 50)
 - **Response (200 OK):**
 ```json
 {
@@ -185,72 +117,200 @@ Base URL: `http://127.0.0.1:8000/api/v1`
     "items": [
       {
         "id": 1,
-        "email": "user@example.com",
-        "full_name": "Nguyễn Văn A",
-        "phone_number": "0912345678",
-        "role": "USER",
-        "is_active": true,
-        "avatar_url": null,
-        "created_at": "2026-10-14T13:30:00Z"
+        "title": "Bán căn hộ 2PN Vinhomes Smart City full nội thất cao cấp",
+        "price": 3200000000.0,
+        "price_unit": "TOTAL",
+        "area": 65.0,
+        "bedrooms": 2,
+        "bathrooms": 2,
+        "address_text": "Đại lộ Thăng Long, Phường Tây Mỗ",
+        "province": "Hà Nội",
+        "district": "Nam Từ Liêm",
+        "transaction_type": "SALE",
+        "category_id": 1,
+        "category_name": "Căn hộ chung cư",
+        "thumbnail_url": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800",
+        "status": "APPROVED",
+        "view_count": 45,
+        "published_at": "2026-10-12T13:30:00Z",
+        "created_at": "2026-10-12T13:00:00Z"
       }
     ],
     "total": 1,
     "page": 1,
-    "size": 10,
+    "size": 12,
     "total_pages": 1
   },
-  "message": "Lấy danh sách người dùng thành công"
+  "message": "Tìm kiếm bất động sản thành công"
 }
 ```
 
 ---
 
-### 3.2. Khóa / Mở Khóa Tài Khoản
-- **Endpoint:** `PATCH /api/v1/users/{id}/status`
-- **Quyền:** ADMIN Only
-- **Request Body:**
-```json
-{
-  "is_active": false
-}
-```
+### 4.2. Xem Chi Tiết Bất Động Sản
+- **Endpoint:** `GET /api/v1/listings/{id}`
+- **Quyền:** Public
+- **Headers:** `X-Session-Id` (optional, dùng để ghi nhận lịch sử xem)
+- **Quy tắc bảo mật & riêng tư (BR-05):**
+  - Khách vãng lai: Số điện thoại người bán được che dạng `0912.xxx.xxx`.
+  - Người dùng đã đăng nhập (kèm Bearer Token): Hiển thị đầy đủ số điện thoại `0912345678`.
+  - Tự động tăng `view_count` và ghi log vào `user_view_history`.
 - **Response (200 OK):**
 ```json
 {
   "success": true,
   "data": {
     "id": 1,
-    "email": "user@example.com",
-    "full_name": "Nguyễn Văn A",
-    "phone_number": "0912345678",
-    "role": "USER",
-    "is_active": false,
-    "avatar_url": null,
-    "created_at": "2026-10-14T13:30:00Z"
+    "user_id": 2,
+    "title": "Bán căn hộ 2PN Vinhomes Smart City full nội thất cao cấp",
+    "description": "Căn hộ tầng trung view công viên trung tâm cực đẹp...",
+    "category_id": 1,
+    "category_name": "Căn hộ chung cư",
+    "transaction_type": "SALE",
+    "price": 3200000000.0,
+    "price_unit": "TOTAL",
+    "area": 65.0,
+    "bedrooms": 2,
+    "bathrooms": 2,
+    "direction": "Đông Nam",
+    "legal_status": "Sổ hồng lâu dài",
+    "address_text": "Đại lộ Thăng Long, Phường Tây Mỗ",
+    "province": "Hà Nội",
+    "district": "Nam Từ Liêm",
+    "ward": "Phường Tây Mỗ",
+    "latitude": 21.0068,
+    "longitude": 105.7441,
+    "status": "APPROVED",
+    "rejection_reason": null,
+    "view_count": 46,
+    "published_at": "2026-10-12T13:30:00Z",
+    "expired_at": "2026-11-11T13:30:00Z",
+    "images": [
+      {
+        "id": 1,
+        "image_url": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800",
+        "public_id": "demo_apt_1",
+        "is_thumbnail": true,
+        "display_order": 0
+      }
+    ],
+    "features": ["Sổ hồng chính chủ", "Nội thất đầy đủ", "Bể bơi 4 mùa"],
+    "owner_id": 2,
+    "owner_name": "Nguyễn Văn Minh",
+    "owner_phone": "0912345678",
+    "owner_avatar": null,
+    "is_favorite": false
   },
-  "message": "Đã khóa tài khoản thành công"
+  "message": "Lấy chi tiết tin đăng thành công"
 }
 ```
-*(Tài khoản sau khi bị khóa nếu thực hiện yêu cầu mới sẽ bị chặn với mã `403 USER_INACTIVE`).*
 
 ---
 
-## 4. Hướng Dẫn Chạy Migration Database (Alembic)
-
-Toàn bộ 10 bảng dữ liệu theo ERD đã được đóng gói trong revision `001_initial_schema`.
-
-1. Khởi động PostgreSQL:
-```powershell
-docker compose up -d
+### 4.3. Đăng Tin Mới
+- **Endpoint:** `POST /api/v1/listings`
+- **Quyền:** Authenticated User
+- **Quy tắc kiểm tra:**
+  - `is_draft = True`: Lưu nháp, không bắt buộc số lượng ảnh.
+  - `is_draft = False`: Gửi duyệt (`PENDING_APPROVAL`), bắt buộc tối thiểu 3 ảnh và tối đa 10 ảnh (định dạng JPG, JPEG, PNG, WEBP).
+- **Request Body:**
+```json
+{
+  "title": "Bán nhà liền kề KĐT Geleximco Lê Trọng Tấn 100m2",
+  "description": "Nhà xây thô hoàn thiện mặt ngoài 4 tầng hiện đại, đường trước nhà 13.5m có vỉa hè rộng rãi.",
+  "category_id": 2,
+  "transaction_type": "SALE",
+  "price": 8500000000.0,
+  "price_unit": "TOTAL",
+  "area": 100.0,
+  "bedrooms": 4,
+  "bathrooms": 4,
+  "direction": "Đông Nam",
+  "legal_status": "Sổ đỏ chính chủ",
+  "address_text": "Khu D Geleximco Lê Trọng Tấn",
+  "province": "Hà Nội",
+  "district": "Hà Đông",
+  "features": ["Gara ô tô", "Đường 13m"],
+  "images": [
+    { "image_url": "https://cloudinary.com/front.jpg", "public_id": "p1", "is_thumbnail": true },
+    { "image_url": "https://cloudinary.com/living.jpg", "public_id": "p2" },
+    { "image_url": "https://cloudinary.com/bedroom.jpg", "public_id": "p3" }
+  ],
+  "is_draft": false
+}
 ```
-2. Thực thi migration lên database PostgreSQL:
+
+---
+
+### 4.4. Chỉnh Sửa & Quản Lý Tin Của Tôi
+| Method | Endpoint | Quyền | Mô tả |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/listings/my/all` | User | Xem toàn bộ tin của cá nhân kèm đủ mọi trạng thái (Draft, Pending, Approved, v.v.) |
+| `PUT` | `/listings/{id}` | Owner | Chỉnh sửa tin của tôi (bị khóa nếu tin đang ở trạng thái `PENDING_APPROVAL`) |
+| `DELETE` | `/listings/{id}` | Owner/Admin | Xóa tin đăng khỏi hệ thống |
+| `PATCH` | `/listings/{id}/visibility` | Owner | Ẩn (`is_hidden: true`) hoặc hiện lại (`is_hidden: false`) tin đã duyệt |
+| `POST` | `/listings/{id}/renew` | Owner | Gia hạn tin đã hết hạn thêm 30 ngày |
+
+---
+
+## 5. Phân Hệ Kiểm Duyệt Quản Trị (Admin Moderation)
+
+### 5.1. Danh Sách Tin Chờ Duyệt
+- **Endpoint:** `GET /api/v1/admin/listings/pending`
+- **Quyền:** ADMIN Only
+- **Query Params:** `page` (default 1), `size` (default 10)
+
+### 5.2. Phê Duyệt hoặc Từ Chối Tin
+- **Endpoint:** `PATCH /api/v1/admin/listings/{id}/moderate`
+- **Quyền:** ADMIN Only
+- **Phê duyệt:**
+```json
+{
+  "action": "APPROVE"
+}
+```
+*(Chuyển status sang `APPROVED`, đặt `published_at = now()` và `expired_at = now() + 30 days`).*
+
+- **Từ chối:**
+```json
+{
+  "action": "REJECT",
+  "rejection_reason": "Ảnh không rõ nét, thiếu thông tin giấy tờ pháp lý."
+}
+```
+*(Chuyển status sang `REJECTED`, lưu lý do từ chối để chủ tin sửa lại).*
+
+---
+
+## 6. Phân Hệ Tương Tác & Tư Vấn (Interactions)
+
+### 6.1. Yêu Thích Bất Động Sản (Favorites)
+- **`POST /api/v1/favorites/{listing_id}`** (User): Bấm lần đầu là thêm vào yêu thích (`is_favorited: true`), bấm lần sau là hủy yêu thích (`is_favorited: false`).
+- **`GET /api/v1/favorites`** (User): Danh sách các tin BĐS mà người dùng đã lưu yêu thích.
+
+### 6.2. Yêu Cầu Tư Vấn / Liên Hệ (Inquiries)
+- **`POST /api/v1/inquiries`** (Public/User): Gửi yêu cầu tư vấn cho người đăng BĐS.
+  - Chặn người bán tự gửi yêu cầu cho chính tin của mình (`SELF_INQUIRY_NOT_ALLOWED`).
+- **`GET /api/v1/inquiries/received`** (Owner): Người đăng xem danh sách khách hàng gửi yêu cầu tư vấn.
+- **`PATCH /api/v1/inquiries/{id}/status`** (Owner): Người đăng đánh dấu trạng thái (`CONTACTED` hoặc `CLOSED`).
+
+---
+
+## 7. Khởi Tạo Dữ Liệu Mẫu (Seed Data)
+
+Script khởi tạo sẵn 5 danh mục BĐS chuẩn, 4 tài khoản mẫu (Admin, 2 Chủ tin, 1 Khách xem), các tin đăng đa trạng thái kèm ảnh và tiện ích:
+
 ```powershell
+# Chạy script tại thư mục backend:
 cd backend
 .\.venv\Scripts\Activate.ps1
-alembic upgrade head
+python scripts/seed_data.py
 ```
-3. Kiểm tra phiên bản hiện tại trên database:
-```powershell
-alembic current
-```
-*(Kết quả mong đợi: `001_initial_schema (head)`).*
+
+### Tài khoản Demo có sẵn sau khi Seed:
+| Email | Mật khẩu | Quyền | Họ tên | Vai trò demo |
+| :--- | :--- | :---: | :--- | :--- |
+| `admin@bds.vn` | `AdminPass123!` | `ADMIN` | Quản Trị Viên Hệ Thống | Kiểm duyệt tin, quản lý tài khoản |
+| `chutin1@bds.vn` | `Password123!` | `USER` | Nguyễn Văn Minh | Đăng tin căn hộ, tiếp nhận liên hệ |
+| `chutin2@bds.vn` | `Password123!` | `USER` | Lê Hoàng Nam | Đăng tin nhà phố, đất nền |
+| `khachxem@bds.vn` | `Password123!` | `USER` | Trần Thu Trang | Khách tìm kiếm, lưu yêu thích, gửi tư vấn |
