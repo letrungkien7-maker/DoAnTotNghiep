@@ -182,28 +182,19 @@ export const ChatbotWidget: React.FC = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Floating launcher button with Monkey Mascot */}
+      {/* Standalone Monkey Mascot launcher (no blue background, no button frames) */}
       {!isOpen && (
         <button
+          type="button"
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-2 pl-2 pr-4 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-medium rounded-full shadow-2xl hover:shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20"
+          className="group relative p-0 bg-transparent border-0 outline-none hover:scale-110 active:scale-95 transition-transform duration-300 focus:outline-none cursor-pointer drop-shadow-xl"
           title="Khỉ Trợ lý AI - Nhìn theo con trỏ chuột"
+          aria-label="Tư vấn AI"
         >
-          {/* Animated Monkey Mascot looking at cursor */}
-          <div className="relative shrink-0">
-            <MonkeyMascot size={46} showSpeechBubble={true} />
-            <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border border-white"></span>
-            </span>
-          </div>
-          <div className="flex flex-col text-left">
-            <span className="text-sm font-bold tracking-wide leading-tight">Tư vấn AI</span>
-            <span className="text-[10px] text-blue-200 font-medium flex items-center gap-1">
-              <span>Khỉ Smart</span>
-              <span className="text-amber-300">🐵</span>
-            </span>
-          </div>
+          {/* Standalone Monkey Mascot looking at cursor */}
+          <MonkeyMascot size={78} showSpeechBubble={true} />
+          {/* Hidden text for screen-reader & test assertions */}
+          <span className="sr-only">Tư vấn AI</span>
         </button>
       )}
 

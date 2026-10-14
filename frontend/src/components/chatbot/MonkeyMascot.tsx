@@ -8,6 +8,20 @@ interface MonkeyMascotProps {
   showSpeechBubble?: boolean;
 }
 
+const MONKEY_QUOTES = [
+  'Hỏi em về nhà đất nha! 🐵',
+  'Tìm nhà ưng ý, để em lo! 🏠',
+  'Cần mua hay thuê nhà nè? ✨',
+  'Em biết nhiều căn hộ giá tốt lắm! 🏢',
+  'Bấm vào em để chat thử nha! 💬',
+  'Đang tìm nhà khu vực nào đó? 📍',
+  'Ngân sách bao nhiêu em lọc được hết! 💰',
+  'Hôm nay có nhiều căn mới đăng lắm! 🌟',
+  'Trợ lý Khỉ AI thông minh nhất xóm! 🍌',
+  'Em biết định giá & phân tích pháp lý đó! 📊',
+  'Nhắn em một câu, tìm nhà liền tay! 🚀',
+];
+
 export const MonkeyMascot: React.FC<MonkeyMascotProps> = ({
   size = 72,
   isTyping: externalIsTyping,
@@ -21,7 +35,30 @@ export const MonkeyMascot: React.FC<MonkeyMascotProps> = ({
   const [pupilOffset, setPupilOffset] = useState({ x: 0, y: 0 });
   const [headTilt, setHeadTilt] = useState({ rotateX: 0, rotateY: 0 });
   const [isBlinking, setIsBlinking] = useState(false);
+  const [quoteIndex, setQuoteIndex] = useState(() => Math.floor(Math.random() * MONKEY_QUOTES.length));
+  const [isBubbleVisible, setIsBubbleVisible] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Rotate speech bubble quotes every 4.5 seconds with random selection
+  useEffect(() => {
+    if (!showSpeechBubble) return;
+
+    const interval = setInterval(() => {
+      setIsBubbleVisible(false);
+      setTimeout(() => {
+        setQuoteIndex((prev) => {
+          let next = Math.floor(Math.random() * MONKEY_QUOTES.length);
+          if (next === prev) {
+            next = (prev + 1) % MONKEY_QUOTES.length;
+          }
+          return next;
+        });
+        setIsBubbleVisible(true);
+      }, 300);
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [showSpeechBubble]);
 
   // 1. Natural blinking effect every 3-5 seconds
   useEffect(() => {
@@ -109,17 +146,21 @@ export const MonkeyMascot: React.FC<MonkeyMascotProps> = ({
     >
       {/* Optional Speech Bubble */}
       {showSpeechBubble && !isTyping && (
-        <div className="absolute -top-10 -left-16 bg-white text-slate-800 text-[11px] font-semibold px-2.5 py-1 rounded-xl shadow-lg border border-amber-200 whitespace-nowrap animate-bounce pointer-events-none z-10 flex items-center gap-1">
-          <span>Hỏi em về nhà đất nha!</span>
-          <span className="text-amber-500">🐵</span>
+        <div
+          className={`absolute bottom-full right-2 mb-2 bg-white/95 backdrop-blur-xs text-slate-800 text-[11px] font-semibold px-3 py-1.5 rounded-2xl shadow-xl border border-amber-200/90 whitespace-nowrap pointer-events-none z-20 flex items-center gap-1.5 transition-all duration-300 transform ${
+            isBubbleVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-90 translate-y-1'
+          }`}
+        >
+          <span>{MONKEY_QUOTES[quoteIndex]}</span>
           <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white border-b border-r border-amber-200 rotate-45 transform" />
         </div>
       )}
 
       {/* Shy "Turning Away" speech indicator when user is typing */}
       {isTyping && (
-        <div className="absolute -top-9 -left-12 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-md whitespace-nowrap z-10 animate-pulse pointer-events-none flex items-center gap-1">
+        <div className="absolute bottom-full right-2 mb-2 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-xl shadow-lg whitespace-nowrap z-20 animate-pulse pointer-events-none flex items-center gap-1">
           <span>Dạ em không nhìn trộm đâu ạ! 🙈</span>
+          <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-amber-500 border-b border-r border-amber-600 rotate-45 transform" />
         </div>
       )}
 
