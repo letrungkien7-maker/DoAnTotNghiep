@@ -30,7 +30,12 @@ class Settings(BaseSettings):
     @property
     def sync_database_url(self) -> str:
         if self.DATABASE_URL:
-            return self.DATABASE_URL
+            url = self.DATABASE_URL
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+            elif url.startswith("postgresql://") and "+psycopg2" not in url:
+                url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+            return url
         return (
             f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@"
             f"{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -41,7 +46,19 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> List[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        origins: List[str] = []
+        for origin in self.CORS_ORIGINS.split(","):
+            cleaned = origin.strip().rstrip("/")
+            if cleaned:
+                if not cleaned.startswith("http://") and not cleaned.startswith("https://"):
+                    origins.append(f"https://{cleaned}")
+                    origins.append(f"http://{cleaned}")
+                else:
+                    origins.append(cleaned)
+        # Always allow deployed Cloudflare Pages domain
+        if "https://real-estate-kien.pages.dev" not in origins:
+            origins.append("https://real-estate-kien.pages.dev")
+        return origins
 
     # Cloudinary
     CLOUDINARY_CLOUD_NAME: str = ""

@@ -1,7 +1,11 @@
 import axios, { AxiosError } from 'axios';
 import { ApiResponse, HealthResponse } from '@/types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+let rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').trim();
+if (rawBaseUrl && !rawBaseUrl.startsWith('http://') && !rawBaseUrl.startsWith('https://')) {
+  rawBaseUrl = `https://${rawBaseUrl}`;
+}
+const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
 const API_V1_PREFIX = import.meta.env.VITE_API_V1_PREFIX || '/api/v1';
 
 export const apiClient = axios.create({
