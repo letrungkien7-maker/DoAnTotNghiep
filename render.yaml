@@ -27,7 +27,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: CORS_ORIGINS
-        value: "https://real-estate-frontend.onrender.com,https://real-estate-kien.pages.dev,http://localhost:5173"
+        value: "https://real-estate-frontend.onrender.com,http://localhost:5173"
 
   # Frontend Vite React Static Site
   - type: web

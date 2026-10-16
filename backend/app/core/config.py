@@ -55,9 +55,6 @@ class Settings(BaseSettings):
                     origins.append(f"http://{cleaned}")
                 else:
                     origins.append(cleaned)
-        # Always allow deployed Cloudflare Pages domain
-        if "https://real-estate-kien.pages.dev" not in origins:
-            origins.append("https://real-estate-kien.pages.dev")
         return origins
 
     # Cloudinary
