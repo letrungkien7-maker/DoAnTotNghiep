@@ -46,7 +46,10 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> List[str]:
-        origins: List[str] = []
+        origins: List[str] = [
+            "https://real-estate-frontend-pk7a.onrender.com",
+            "https://real-estate-frontend.onrender.com",
+        ]
         for origin in self.CORS_ORIGINS.split(","):
             cleaned = origin.strip().rstrip("/")
             if cleaned:
@@ -55,7 +58,7 @@ class Settings(BaseSettings):
                     origins.append(f"http://{cleaned}")
                 else:
                     origins.append(cleaned)
-        return origins
+        return list(dict.fromkeys(origins))
 
     # Cloudinary
     CLOUDINARY_CLOUD_NAME: str = ""
