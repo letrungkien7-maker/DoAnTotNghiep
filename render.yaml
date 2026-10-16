@@ -30,8 +30,9 @@ services:
         value: "https://real-estate-frontend.onrender.com,https://real-estate-kien.pages.dev,http://localhost:5173"
 
   # Frontend Vite React Static Site
-  - type: static
+  - type: web
     name: real-estate-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: "npm install && npm run build"
     staticPublishPath: "./dist"
