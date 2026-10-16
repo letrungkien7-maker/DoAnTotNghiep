@@ -1,7 +1,7 @@
 databases:
   - name: real-estate-db
     databaseName: real_estate_db
-    user: postgres
+    user: real_estate_user
     plan: free
     region: singapore
 
@@ -27,17 +27,12 @@ services:
       - key: DEBUG
         value: "false"
       - key: CORS_ORIGINS
-        fromService:
-          type: web
-          name: real-estate-frontend
-          property: host
+        value: "https://real-estate-frontend.onrender.com,https://real-estate-kien.pages.dev,http://localhost:5173"
 
   # Frontend Vite React Static Site
-  - type: web
+  - type: static
     name: real-estate-frontend
-    runtime: static
     rootDir: frontend
-    plan: free
     buildCommand: "npm install && npm run build"
     staticPublishPath: "./dist"
     routes:
@@ -46,9 +41,6 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: real-estate-backend
-          property: host
+        value: "https://real-estate-backend.onrender.com"
       - key: VITE_API_V1_PREFIX
         value: "/api/v1"
