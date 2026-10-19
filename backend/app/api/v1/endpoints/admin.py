@@ -59,3 +59,22 @@ def moderate_listing(
         data=result,
         message=f"Đã {action_text} tin đăng thành công"
     )
+
+
+@router.post(
+    "/seed-data",
+    response_model=ResponseBase[dict],
+    status_code=status.HTTP_200_OK,
+    summary="[Admin] Nạp dữ liệu mẫu 63 tỉnh thành",
+    description="Kích hoạt nạp dữ liệu mẫu bao phủ 63 tỉnh/thành phố trên toàn quốc."
+)
+def trigger_seed_data(
+    _: User = Depends(require_admin),
+) -> ResponseBase[dict]:
+    from app.scripts.seed_demo_data import seed_database
+    seed_database()
+    return ResponseBase[dict](
+        success=True,
+        data={"status": "completed"},
+        message="Đã khởi tạo thành công dữ liệu mẫu cho 63 tỉnh thành!"
+    )

@@ -17,6 +17,7 @@ from app.models.listing import (
     TransactionType,
 )
 from app.models.user import User, UserRole
+from app.scripts.provinces_data import get_province_listings
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("seed_data")
@@ -420,6 +421,8 @@ def seed_database() -> None:
                 "moderation_reason": "Bất động sản không có giấy tờ pháp lý hợp lệ theo quy định đăng tin của sàn (yêu cầu sổ đỏ/sổ hồng hoặc HĐMB).",
             },
         ]
+        # Bổ sung dữ liệu mẫu cho toàn bộ 63 tỉnh/thành phố Việt Nam
+        sample_listings.extend(get_province_listings(seller_id))
 
         seeded_listings = []
         for l_data in sample_listings:
