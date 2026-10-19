@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, MapPin, BedDouble, Bath, Eye, Calendar } from 'lucide-react';
+import { Heart, MapPin, BedDouble, Bath, Eye, Calendar, ShieldCheck } from 'lucide-react';
 import { ListingCard as ListingCardType } from '@/types';
-import { formatDate, formatPrice, getStatusBadge } from '@/utils/formatters';
+import { formatDate, formatPrice, formatPricePerMeter, getStatusBadge } from '@/utils/formatters';
 import { interactionService } from '@/services/interaction.service';
 import { useAuth } from '@/context/AuthContext';
 
@@ -102,13 +102,18 @@ export const ListingCard: React.FC<ListingCardProps> = ({
         </button>
 
         {/* Price & Area Overlay Bar */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 text-white flex items-end justify-between">
+        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-3 text-white flex items-end justify-between">
           <div>
-            <span className="text-lg font-bold text-amber-300">
+            <div className="text-lg font-bold text-amber-300 drop-shadow-xs leading-none">
               {formatPrice(listing.price, listing.price_unit, listing.transaction_type)}
-            </span>
+            </div>
+            {listing.area > 0 && (
+              <div className="text-[11px] text-gray-300 font-medium mt-1">
+                {formatPricePerMeter(listing.price, listing.area, listing.transaction_type)}
+              </div>
+            )}
           </div>
-          <div className="text-xs font-medium bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
+          <div className="text-xs font-semibold bg-white/20 border border-white/20 px-2.5 py-0.5 rounded-md backdrop-blur-md">
             {listing.area} m²
           </div>
         </div>
@@ -117,12 +122,18 @@ export const ListingCard: React.FC<ListingCardProps> = ({
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wide">
-            {listing.category_name}
-          </span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">
+              {listing.category_name}
+            </span>
+            <span className="inline-flex items-center space-x-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+              <span>Sổ đỏ/hồng</span>
+            </span>
+          </div>
 
           <Link to={`/listings/${listing.id}`}>
-            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mt-1 hover:text-blue-600 transition leading-snug">
+            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mt-1.5 hover:text-blue-600 transition leading-snug">
               {listing.title}
             </h3>
           </Link>

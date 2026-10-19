@@ -7,15 +7,21 @@ import {
   Compass,
   Layers,
   Sparkles,
-  ShieldCheck,
-  TrendingUp,
   ArrowRight,
+  TrendingUp,
+  Flame,
+  PlusCircle,
+  MessageSquare,
 } from 'lucide-react';
 import { Category, ListingCard as ListingCardType } from '@/types';
 import { listingService } from '@/services/listing.service';
 import { categoryService } from '@/services/category.service';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { StatsRibbon } from '@/components/home/StatsRibbon';
+import { CitySpotlight } from '@/components/home/CitySpotlight';
+import { MortgageCalculator } from '@/components/home/MortgageCalculator';
+import { WhyChooseUs } from '@/components/home/WhyChooseUs';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,6 +58,14 @@ export const HomePage: React.FC = () => {
     navigate(`/search?${query.toString()}`);
   };
 
+  const handleQuickTagClick = (keyword: string, province?: string) => {
+    const query = new URLSearchParams();
+    if (keyword) query.set('keyword', keyword);
+    if (province) query.set('province', province);
+    query.set('transaction_type', transactionType);
+    navigate(`/search?${query.toString()}`);
+  };
+
   const getCategoryIcon = (slug: string) => {
     switch (slug) {
       case 'can-ho-chung-cu':
@@ -68,36 +82,40 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-12 pb-16">
+    <div className="space-y-16 pb-20 overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]" />
+      <section className="relative bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-white pt-24 pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Glow backdrop circles */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-blue-600/15 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/3 right-10 w-[300px] h-[300px] bg-indigo-500/15 blur-[100px] rounded-full pointer-events-none" />
 
         <div className="max-w-4xl mx-auto relative z-10 text-center space-y-6">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-semibold">
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Nền tảng BĐS tích hợp Chatbot AI & Gợi ý thông minh</span>
+          {/* Top Pill */}
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-400/30 text-xs font-semibold backdrop-blur-md shadow-xs">
+            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <span>Nền tảng BĐS Thông Minh Tích Hợp Trợ Lý AI • 63 Tỉnh Thành</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-            Khám phá Ngôi nhà Mơ ước <br className="hidden sm:inline" />
-            với <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-amber-300">Công nghệ Trí tuệ Nhân tạo</span>
+          {/* Heading */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+            Khám phá Ngôi nhà Mơ ước <br />
+            với <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-amber-300">Trí Tuệ Nhân Tạo AI</span>
           </h1>
 
-          <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto">
-            Hàng ngàn tin đăng được kiểm duyệt minh bạch, tìm kiếm nhanh chóng và hỗ trợ tư vấn 24/7 từ trợ lý thông minh.
+          <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            Hàng ngàn tin đăng được kiểm duyệt pháp lý minh bạch, gợi ý thông minh theo nhu cầu và tư vấn 24/7 từ linh vật AI.
           </p>
 
-          {/* Quick Search Card */}
-          <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-2xl text-gray-900 max-w-2xl mx-auto border border-white/20">
+          {/* Search Glass Container */}
+          <div className="bg-white/95 backdrop-blur-xl p-3 sm:p-5 rounded-3xl shadow-2xl text-gray-900 max-w-2xl mx-auto border border-white/40">
             {/* Tabs */}
             <div className="flex space-x-2 mb-3">
               <button
                 type="button"
                 onClick={() => setTransactionType('SALE')}
-                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${
+                className={`px-5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
                   transactionType === 'SALE'
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -106,9 +124,9 @@ export const HomePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTransactionType('RENT')}
-                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${
+                className={`px-5 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
                   transactionType === 'RENT'
-                    ? 'bg-emerald-600 text-white shadow-xs'
+                    ? 'bg-emerald-600 text-white shadow-md'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
@@ -124,28 +142,80 @@ export const HomePage: React.FC = () => {
                   type="text"
                   value={searchKeyword}
                   onChange={(e) => setSearchKeyword(e.target.value)}
-                  placeholder="Nhập địa điểm, dự án hoặc nhu cầu tìm kiếm..."
-                  className="w-full pl-10 pr-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                  placeholder="Nhập địa điểm, dự án, tên đường hoặc nhu cầu (VD: Căn hộ 2PN view biển)..."
+                  className="w-full pl-10 pr-4 py-3.5 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition"
                 />
               </div>
               <button
                 type="submit"
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition flex items-center justify-center space-x-2 shadow-md shrink-0"
+                className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-lg shrink-0 cursor-pointer"
               >
                 <Search className="w-4 h-4" />
                 <span>Tìm kiếm</span>
               </button>
             </form>
+
+            {/* Quick Trending Tags */}
+            <div className="flex items-center flex-wrap gap-1.5 pt-3 mt-1 border-t border-gray-100 text-xs">
+              <span className="text-gray-400 font-semibold flex items-center space-x-1 mr-1">
+                <Flame className="w-3.5 h-3.5 text-amber-500" />
+                <span>Xu hướng:</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => handleQuickTagClick('', 'Thành phố Hà Nội')}
+                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-medium transition cursor-pointer"
+              >
+                Hà Nội
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickTagClick('', 'Thành phố Hồ Chí Minh')}
+                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-medium transition cursor-pointer"
+              >
+                TP. HCM
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickTagClick('', 'Thành phố Đà Nẵng')}
+                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-medium transition cursor-pointer"
+              >
+                Đà Nẵng
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickTagClick('Chung cư')}
+                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-medium transition cursor-pointer"
+              >
+                Chung cư cao cấp
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickTagClick('Biệt thự')}
+                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-blue-50 hover:text-blue-600 text-gray-700 font-medium transition cursor-pointer"
+              >
+                Biệt thự nghỉ dưỡng
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Stats Counter Ribbon */}
+      <StatsRibbon />
+
       {/* Categories Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Khám phá theo Loại hình</h2>
-            <p className="text-xs text-gray-500 mt-1">Các danh mục bất động sản phổ biến và được quan tâm nhất</p>
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider mb-2">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Phân loại phổ biến</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+              Khám Phá Theo Loại Hình Bất Động Sản
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">Các danh mục bất động sản đa dạng đáp ứng trọn vẹn nhu cầu của bạn</p>
           </div>
         </div>
 
@@ -154,14 +224,18 @@ export const HomePage: React.FC = () => {
             <Link
               key={cat.id}
               to={`/search?category_id=${cat.id}`}
-              className="p-5 bg-white border border-gray-200 rounded-xl shadow-2xs hover:shadow-md hover:border-blue-400 transition-all text-center flex flex-col items-center group"
+              className="p-6 bg-white border border-gray-200/80 rounded-2xl shadow-xs hover:shadow-xl hover:border-blue-400 hover:-translate-y-1 transition-all duration-300 text-center flex flex-col items-center group relative overflow-hidden"
             >
-              <div className="p-3 bg-gray-50 rounded-xl mb-3 group-hover:scale-110 group-hover:bg-blue-50 transition-transform">
+              <div className="p-4 bg-gray-50 rounded-2xl mb-3.5 group-hover:scale-110 group-hover:bg-blue-50 transition-all duration-300">
                 {getCategoryIcon(cat.slug)}
               </div>
-              <h3 className="font-semibold text-gray-800 text-sm group-hover:text-blue-600 transition">
+              <h3 className="font-bold text-gray-900 text-sm group-hover:text-blue-600 transition">
                 {cat.name}
               </h3>
+              <span className="text-[11px] font-semibold text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity mt-2 flex items-center space-x-0.5">
+                <span>Xem tin đăng</span>
+                <ArrowRight className="w-3 h-3" />
+              </span>
             </Link>
           ))}
         </div>
@@ -169,16 +243,22 @@ export const HomePage: React.FC = () => {
 
       {/* Featured / Recent Listings */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Bất động sản Nổi bật Mới nhất</h2>
-            <p className="text-xs text-gray-500 mt-1">Tin đăng đã được ban quản trị kiểm duyệt và xác thực</p>
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wider mb-2">
+              <Flame className="w-3.5 h-3.5" />
+              <span>Cập nhật mới nhất</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+              Bất Động Sản Nổi Bật Được Kiểm Duyệt
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">Tin đăng đã xác thực pháp lý & hình ảnh thực tế từ ban quản trị</p>
           </div>
           <Link
             to="/search"
-            className="inline-flex items-center space-x-1 text-sm font-semibold text-blue-600 hover:text-blue-700"
+            className="inline-flex items-center space-x-1 text-sm font-bold text-blue-600 hover:text-blue-700 transition"
           >
-            <span>Xem tất cả</span>
+            <span>Xem tất cả danh sách</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -186,7 +266,7 @@ export const HomePage: React.FC = () => {
         {loading ? (
           <LoadingSpinner message="Đang tải danh sách bất động sản..." />
         ) : featuredListings.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-200 shadow-xs">
             <p className="text-sm text-gray-500">Chưa có tin đăng nào khả dụng trên hệ thống.</p>
           </div>
         ) : (
@@ -198,44 +278,48 @@ export const HomePage: React.FC = () => {
         )}
       </section>
 
-      {/* Value Propositions */}
-      <section className="bg-blue-50/60 py-12 border-y border-blue-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-2xl font-bold text-gray-900">Lợi ích vượt trội cho Người dùng</h2>
-            <p className="text-xs text-gray-600 mt-1">Hệ thống thông minh toàn diện dành cho cả Người mua và Người bán</p>
+      {/* City Spotlight Section */}
+      <CitySpotlight />
+
+      {/* Interactive Mortgage Loan Calculator */}
+      <MortgageCalculator />
+
+      {/* Why Choose Us */}
+      <WhyChooseUs />
+
+      {/* Call To Action Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-xl space-y-3 text-center md:text-left">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+              Bạn Có Bất Động Sản Cần Giao Dịch?
+            </h2>
+            <p className="text-sm text-blue-100 leading-relaxed">
+              Tiếp cận hàng ngàn khách hàng tiềm năng mỗi ngày với hệ thống kiểm duyệt tin đăng chuyên nghiệp và trợ lý AI thông minh hỗ trợ kết nối.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-3">
-              <div className="p-3 bg-blue-100 text-blue-600 w-fit rounded-xl">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-gray-900">Kiểm duyệt Tin đăng Nghiêm ngặt</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Mọi tin đăng phải có tối thiểu 3 ảnh chất lượng cao và được Admin duyệt kỹ lưỡng trước khi xuất hiện trên trang tìm kiếm.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-3">
-              <div className="p-3 bg-indigo-100 text-indigo-600 w-fit rounded-xl">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-gray-900">Trợ lý AI Chatbot Tư vấn 24/7</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Tự động hiểu ngôn ngữ tự nhiên, gợi ý bất động sản chuẩn xác theo ngân sách và vị trí mà không cần tìm kiếm thủ công.
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs space-y-3">
-              <div className="p-3 bg-emerald-100 text-emerald-600 w-fit rounded-xl">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-gray-900">Bảo mật Thông tin & Quyền riêng tư</h3>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Che số điện thoại đối với khách vãng lai để tránh spam, chỉ cho phép thành viên đã xác thực xem thông tin liên hệ đầy đủ.
-              </p>
-            </div>
+          <div className="relative z-10 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Link
+              to="/post-listing"
+              className="px-6 py-3.5 bg-white text-blue-700 hover:bg-blue-50 font-bold text-sm rounded-xl transition shadow-lg flex items-center justify-center space-x-2"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Đăng tin miễn phí ngay</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                const chatbotToggle = document.querySelector('button[title*="Chat"]') as HTMLButtonElement;
+                if (chatbotToggle) chatbotToggle.click();
+              }}
+              className="px-6 py-3.5 bg-blue-900/60 hover:bg-blue-900 text-white font-bold text-sm rounded-xl transition border border-white/20 flex items-center justify-center space-x-2 cursor-pointer"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Trò chuyện với AI</span>
+            </button>
           </div>
         </div>
       </section>

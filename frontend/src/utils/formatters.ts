@@ -23,6 +23,27 @@ export const formatPrice = (price: number, priceUnit = 'TOTAL', transactionType 
   return `${price.toLocaleString('vi-VN')} đ`;
 };
 
+export const formatPricePerMeter = (price: number, area: number, transactionType = 'SALE'): string => {
+  if (!price || !area || price <= 0 || area <= 0) return '';
+  const pricePerM2 = price / area;
+
+  if (transactionType === 'RENT') {
+    if (pricePerM2 >= 1_000_000) {
+      return `~${(pricePerM2 / 1_000_000).toFixed(1)} tr/m²`;
+    }
+    return `~${Math.round(pricePerM2 / 1000)}k/m²`;
+  }
+
+  // SALE
+  if (pricePerM2 >= 1_000_000_000) {
+    return `~${(pricePerM2 / 1_000_000_000).toFixed(2)} tỷ/m²`;
+  }
+  if (pricePerM2 >= 1_000_000) {
+    return `~${(pricePerM2 / 1_000_000).toFixed(1)} tr/m²`;
+  }
+  return `~${Math.round(pricePerM2).toLocaleString('vi-VN')} đ/m²`;
+};
+
 export const formatDate = (dateStr?: string | null): string => {
   if (!dateStr) return '';
   try {
