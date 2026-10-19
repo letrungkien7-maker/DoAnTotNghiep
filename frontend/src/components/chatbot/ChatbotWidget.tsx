@@ -181,7 +181,7 @@ export const ChatbotWidget: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50">
       {/* Standalone Monkey Mascot launcher (no blue background, no button frames) */}
       {!isOpen && (
         <button
@@ -192,7 +192,12 @@ export const ChatbotWidget: React.FC = () => {
           aria-label="Tư vấn AI"
         >
           {/* Standalone Monkey Mascot looking at cursor */}
-          <MonkeyMascot size={78} showSpeechBubble={true} />
+          <div className="hidden sm:block">
+            <MonkeyMascot size={78} showSpeechBubble={true} />
+          </div>
+          <div className="block sm:hidden">
+            <MonkeyMascot size={58} showSpeechBubble={false} />
+          </div>
           {/* Hidden text for screen-reader & test assertions */}
           <span className="sr-only">Tư vấn AI</span>
         </button>
@@ -200,7 +205,7 @@ export const ChatbotWidget: React.FC = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="w-[375px] sm:w-[440px] h-[580px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-[calc(100vw-1.5rem)] sm:w-[440px] max-w-[440px] h-[580px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-4 py-2.5 text-white flex items-center justify-between shadow-xs select-none">
             <div className="flex items-center space-x-2.5">
