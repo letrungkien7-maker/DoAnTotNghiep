@@ -26,6 +26,10 @@ services:
         value: production
       - key: DEBUG
         value: "false"
+      - key: AUTO_SEED_DEMO_DATA
+        value: "true"
+      - key: AUTO_SEED_LISTING_LIMIT
+        value: "20"
       - key: CORS_ORIGINS
         value: "https://real-estate-frontend-pk7a.onrender.com,https://real-estate-frontend.onrender.com,http://localhost:5173"
 

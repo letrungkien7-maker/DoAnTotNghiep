@@ -1,12 +1,14 @@
 import logging
-import sys
 from datetime import datetime, timedelta, timezone
+from typing import List, Optional, cast
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
-from app.core.database import SessionLocal
+from app.core.config import settings
+from app.core.database import SessionLocal, engine
+from app.core.exceptions import AppException
 from app.core.security import hash_password
-from app.models.chat import ChatMessage, ChatSender, ChatSession
+from app.models import Base
 from app.models.interaction import Favorite, Inquiry, InquiryStatus, UserViewHistory
 from app.models.listing import (
     Category,
@@ -23,7 +25,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("seed_data")
 
 
-def seed_database() -> None:
+def seed_database(max_listings: Optional[int] = None) -> None:
     db = SessionLocal()
     now = datetime.now(timezone.utc)
 
@@ -36,11 +38,36 @@ def seed_database() -> None:
         # 1. Khởi tạo danh mục bất động sản chuẩn
         # -------------------------------------------------------------
         categories_data = [
-            {"id": 1, "name": "Căn hộ chung cư", "slug": "can-ho-chung-cu", "description": "Căn hộ chung cư cao cấp, trung cấp, studio và officetel"},
-            {"id": 2, "name": "Nhà riêng - Nhà phố", "slug": "nha-rieng-nha-pho", "description": "Nhà ở riêng lẻ, nhà liền kề, nhà ngõ phố và shophouse"},
-            {"id": 3, "name": "Biệt thự nghỉ dưỡng", "slug": "biet-thu-nghi-duong", "description": "Biệt thự đơn lập, song lập, villa sinh thái và ven biển"},
-            {"id": 4, "name": "Đất nền dự án", "slug": "dat-nen-du-an", "description": "Đất thổ cư, đất phân lô dự án và khu đô thị mới"},
-            {"id": 5, "name": "Mặt bằng kinh doanh", "slug": "mat-bang-kinh-doanh", "description": "Mặt tiền buôn bán, văn phòng cho thuê và kiot thương mại"},
+            {
+                "id": 1,
+                "name": "Căn hộ chung cư",
+                "slug": "can-ho-chung-cu",
+                "description": "Căn hộ chung cư cao cấp, trung cấp, studio và officetel",
+            },
+            {
+                "id": 2,
+                "name": "Nhà riêng - Nhà phố",
+                "slug": "nha-rieng-nha-pho",
+                "description": "Nhà ở riêng lẻ, nhà liền kề, nhà ngõ phố và shophouse",
+            },
+            {
+                "id": 3,
+                "name": "Biệt thự nghỉ dưỡng",
+                "slug": "biet-thu-nghi-duong",
+                "description": "Biệt thự đơn lập, song lập, villa sinh thái và ven biển",
+            },
+            {
+                "id": 4,
+                "name": "Đất nền dự án",
+                "slug": "dat-nen-du-an",
+                "description": "Đất thổ cư, đất phân lô dự án và khu đô thị mới",
+            },
+            {
+                "id": 5,
+                "name": "Mặt bằng kinh doanh",
+                "slug": "mat-bang-kinh-doanh",
+                "description": "Mặt tiền buôn bán, văn phòng cho thuê và kiot thương mại",
+            },
         ]
 
         for cat_info in categories_data:
@@ -97,11 +124,12 @@ def seed_database() -> None:
                 )
                 db.add(user)
                 db.flush()
-                logger.info(f"Đã tạo tài khoản {u['role']}: {u['email']} (Mật khẩu: {u['password']})")
+                logger.info(
+                    f"Đã tạo tài khoản {u['role']}: {u['email']} (Mật khẩu: {u['password']})"
+                )
             created_users[u["email"]] = user
         db.commit()
 
-        admin_id = created_users["admin@bds-smart.vn"].id
         seller_id = created_users["seller@bds-smart.vn"].id
         buyer_id = created_users["buyer@bds-smart.vn"].id
 
@@ -133,7 +161,13 @@ def seed_database() -> None:
                 "published_at": now - timedelta(days=2),
                 "expired_at": now + timedelta(days=28),
                 "view_count": 85,
-                "features": ["Nội thất đầy đủ", "Sổ đỏ chính chủ", "Thang máy", "Bể bơi", "Gara ô tô"],
+                "features": [
+                    "Nội thất đầy đủ",
+                    "Sổ đỏ chính chủ",
+                    "Thang máy",
+                    "Bể bơi",
+                    "Gara ô tô",
+                ],
                 "images": [
                     "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80",
                     "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
@@ -226,7 +260,13 @@ def seed_database() -> None:
                 "published_at": now - timedelta(days=3),
                 "expired_at": now + timedelta(days=27),
                 "view_count": 110,
-                "features": ["Nội thất đầy đủ", "Sổ đỏ chính chủ", "Thang máy", "Bể bơi", "View hồ"],
+                "features": [
+                    "Nội thất đầy đủ",
+                    "Sổ đỏ chính chủ",
+                    "Thang máy",
+                    "Bể bơi",
+                    "View hồ",
+                ],
                 "images": [
                     "https://images.unsplash.com/photo-1567496898669-ee935f5f647a?auto=format&fit=crop&w=800&q=80",
                     "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80",
@@ -288,7 +328,13 @@ def seed_database() -> None:
                 "published_at": now - timedelta(days=6),
                 "expired_at": now + timedelta(days=24),
                 "view_count": 215,
-                "features": ["Sổ đỏ chính chủ", "Gara ô tô", "Bể bơi", "Nội thất đầy đủ", "View hồ"],
+                "features": [
+                    "Sổ đỏ chính chủ",
+                    "Gara ô tô",
+                    "Bể bơi",
+                    "Nội thất đầy đủ",
+                    "View hồ",
+                ],
                 "images": [
                     "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80",
                     "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80",
@@ -424,6 +470,9 @@ def seed_database() -> None:
         # Bổ sung dữ liệu mẫu cho toàn bộ 63 tỉnh/thành phố Việt Nam
         sample_listings.extend(get_province_listings(seller_id))
 
+        if max_listings is not None and max_listings > 0:
+            sample_listings = sample_listings[:max_listings]
+
         seeded_listings = []
         for l_data in sample_listings:
             existing = db.scalar(select(Listing).where(Listing.title == l_data["title"]))
@@ -431,22 +480,24 @@ def seed_database() -> None:
                 seeded_listings.append(existing)
                 continue
 
-            moderation_reason = l_data.pop("moderation_reason", None)
-            features = l_data.pop("features", [])
-            images = l_data.pop("images", [])
+            moderation_reason: Optional[str] = cast(
+                Optional[str], l_data.pop("moderation_reason", None)
+            )
+            features: List[str] = list(cast(List[str], l_data.pop("features", [])))
+            images: List[str] = list(cast(List[str], l_data.pop("images", [])))
 
             listing = Listing(**l_data)
             db.add(listing)
             db.flush()
 
             for f_name in features:
-                feat = ListingFeature(listing_id=listing.id, feature_name=f_name)
+                feat = ListingFeature(listing_id=listing.id, feature_name=str(f_name))
                 db.add(feat)
 
             for idx, img_url in enumerate(images):
                 img = ListingImage(
                     listing_id=listing.id,
-                    image_url=img_url,
+                    image_url=str(img_url),
                     public_id=f"demo_img_{listing.id}_{idx}",
                     is_thumbnail=(idx == 0),
                     display_order=idx,
@@ -454,7 +505,7 @@ def seed_database() -> None:
                 db.add(img)
 
             if listing.status == ListingStatus.REJECTED.value and moderation_reason:
-                listing.rejection_reason = moderation_reason
+                listing.rejection_reason = str(moderation_reason)
 
             seeded_listings.append(listing)
             logger.info(f"Đã tạo tin đăng: [{listing.status}] {listing.title}")
@@ -464,21 +515,23 @@ def seed_database() -> None:
         # -------------------------------------------------------------
         # 4. Khởi tạo tương tác mẫu (Lịch sử xem, Yêu thích, Tư vấn)
         # -------------------------------------------------------------
-        approved_listings = [l for l in seeded_listings if l.status == ListingStatus.APPROVED.value]
+        approved_listings = [
+            listing for listing in seeded_listings if listing.status == ListingStatus.APPROVED.value
+        ]
 
         if approved_listings:
             # Seed View History cho buyer (giúp thuật toán gợi ý cá nhân hóa hoạt động ngay)
-            for l in approved_listings[:4]:
+            for listing in approved_listings[:4]:
                 exists_view = db.scalar(
                     select(UserViewHistory).where(
                         UserViewHistory.user_id == buyer_id,
-                        UserViewHistory.listing_id == l.id,
+                        UserViewHistory.listing_id == listing.id,
                     )
                 )
                 if not exists_view:
                     view = UserViewHistory(
                         user_id=buyer_id,
-                        listing_id=l.id,
+                        listing_id=listing.id,
                         session_id="seed_session_buyer",
                         duration_seconds=45,
                         viewed_at=now - timedelta(hours=5),
@@ -486,17 +539,17 @@ def seed_database() -> None:
                     db.add(view)
 
             # Seed Favorite cho buyer
-            for l in [approved_listings[0], approved_listings[1]]:
+            for listing in [approved_listings[0], approved_listings[1]]:
                 exists_fav = db.scalar(
                     select(Favorite).where(
                         Favorite.user_id == buyer_id,
-                        Favorite.listing_id == l.id,
+                        Favorite.listing_id == listing.id,
                     )
                 )
                 if not exists_fav:
                     fav = Favorite(
                         user_id=buyer_id,
-                        listing_id=l.id,
+                        listing_id=listing.id,
                     )
                     db.add(fav)
 
@@ -519,7 +572,9 @@ def seed_database() -> None:
                     status=InquiryStatus.NEW.value,
                 )
                 db.add(inq)
-                logger.info(f"Đã tạo yêu cầu tư vấn mẫu từ Khách mua gửi tin ID {target_listing.id}")
+                logger.info(
+                    f"Đã tạo yêu cầu tư vấn mẫu từ Khách mua gửi tin ID {target_listing.id}"
+                )
 
         db.commit()
 
@@ -534,10 +589,32 @@ def seed_database() -> None:
     except Exception as e:
         db.rollback()
         logger.error(f"Lỗi khởi tạo dữ liệu mẫu: {e}", exc_info=True)
-        sys.exit(1)
+        raise AppException(
+            message=f"Lỗi khởi tạo dữ liệu mẫu: {e}", code="SEED_DATA_ERROR", status_code=500
+        )
     finally:
         db.close()
 
 
+def ensure_demo_data_seeded(max_listings: Optional[int] = None) -> bool:
+    """Ensure tables exist and seed demo data only if the listings table is empty."""
+    Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        listing_count = db.scalar(select(func.count(Listing.id))) or 0
+        if listing_count > 0:
+            logger.info(
+                f"Bỏ qua auto-seed: Database đã có sẵn {listing_count} tin đăng."
+            )
+            return False
+    finally:
+        db.close()
+
+    limit = max_listings if max_listings is not None else settings.AUTO_SEED_LISTING_LIMIT
+    logger.info(f"Database đang trống — tự động nạp tối đa {limit} tin đăng mẫu...")
+    seed_database(max_listings=limit)
+    return True
+
+
 if __name__ == "__main__":
-    seed_database()
+    seed_database(max_listings=settings.AUTO_SEED_LISTING_LIMIT)

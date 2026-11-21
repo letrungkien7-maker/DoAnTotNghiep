@@ -1,5 +1,6 @@
 from typing import List
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -71,11 +72,26 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
+    # Demo Data Auto-Seeding
+    AUTO_SEED_DEMO_DATA: bool = True
+    AUTO_SEED_LISTING_LIMIT: int = 20
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @model_validator(mode="after")
+    def validate_production_secret_key(self) -> "Settings":
+        insecure_keys = {
+            "default_dev_secret_key_change_me_in_production",
+            "bds_production_super_secret_jwt_key_2026_xyz",
+            "",
+        }
+        if self.APP_ENV.lower() == "production":
+            if not self.SECRET_KEY or self.SECRET_KEY in insecure_keys or len(self.SECRET_KEY) < 32:
+                raise ValueError(
+                    "SECRET_KEY không an toàn! Trên môi trường production, bắt buộc phải cung cấp "
+                    "SECRET_KEY ngẫu nhiên có độ dài tối thiểu 32 ký tự qua biến môi trường."
+                )
+        return self
 
 
 settings = Settings()
